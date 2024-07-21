@@ -9,9 +9,9 @@ import json
 from pytube import YouTube
 import os
 import assemblyai as aai
-# import openai
 from openai import OpenAI
 from dotenv import load_dotenv
+from .models import BlogPost
 
 load_dotenv()
 
@@ -30,13 +30,19 @@ def generate_blog(request):
         except (KeyError, json.JSONDecodeError):
             return JsonResponse({'error': 'Invalid data sent'}, status=400)
         
+        # check existing blog posts
+        if BlogPost.objects.filter(youtube_link=yt_link).exists():
+            blog_article = BlogPost.objects.filter(youtube_link=yt_link).first()
+
+            return JsonResponse({'content': blog_article.generated_content})
+        
         # get yt title 
-        # title = yt_title(yt_link)
+        title = yt_title(yt_link)
 
         # get transcript
-        # transcription = get_transcription(yt_link)
-        # if not transcription:
-        #     return JsonResponse({'error': "Failed to get transcript"}, status=500)
+        transcription = get_transcription(yt_link)
+        if not transcription:
+            return JsonResponse({'error': "Failed to get transcript"}, status=500)
 
         # use OpenAI to generate the blog 
         transcription = "test"
@@ -45,6 +51,14 @@ def generate_blog(request):
             return JsonResponse({'error': "Failed to generate blog article"}, status=500)
 
         # save blog article to database
+        blog_article = BlogPost.objects.create(
+            user=request.user,
+            youtube_title=title,
+            youtube_link=yt_link,
+            generated_content=blog_content,
+        )
+        blog_article.save()
+
 
         # return blog article as a response 
         return JsonResponse({'content': blog_content})
@@ -60,16 +74,19 @@ def yt_title(link):
 def download_audio(link):
     yt = YouTube(link)
     yt_title = yt.title
-    mp3_file = yt_title + ".mp3"
+    video = yt.streams.filter(only_audio=True).first()
+    out_file = video.download(output_path=settings.MEDIA_ROOT)
+    base, ext = os.path.splitext(out_file)
+    mp3_file = base + '.mp3'
     if not os.path.exists(mp3_file):
-        video = yt.streams.filter(only_audio=True).first()
-        out_file = video.download(output_path=settings.MEDIA_ROOT)
         os.rename(out_file, mp3_file)
+    else:
+        os.remove(out_file)
     return mp3_file
 
 def get_transcription(link):
     audio_file = download_audio(link)
-    aai.settings.api_key = os.getenv('AAI_AI_API_KEY')
+    aai.settings.api_key = os.getenv('AAI_AI_API_KEY').replace('"', "")
 
     transcriber = aai.Transcriber()
     transcript = transcriber.transcribe(audio_file)
@@ -91,13 +108,22 @@ def generate_blog_from_transcription(transcription):
             ]
         )
 
-        print(completion.choices[0].message)
-
         generated_content = completion.choices[0].message
     except Exception as e:
         generated_content = f"This is a fake response as the chat gpt request failed due to {e}"
 
     return generated_content
+
+def blog_list(request):
+    blog_articles = BlogPost.objects.filter(user=request.user)
+    return render(request, "all-blogs.html", {'blog_articles': blog_articles})
+
+def blog_details(request, pk):
+    blog_article_detail = BlogPost.objects.get(id=pk)
+    if request.user == blog_article_detail.user:
+        return render(request, 'blog-details.html', {'blog_article_detail': blog_article_detail})
+    else:
+        return redirect('/')
 
 def user_login(request):
     if request.method == 'POST':
