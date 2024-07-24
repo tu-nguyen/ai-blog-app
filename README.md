@@ -10,7 +10,11 @@
 
 ## About
 
-TODO
+An AI Blog web app made using Python and Django based off of a freecodecamp video [linked here](https://www.youtube.com/watch?v=ftKiHCDVwfA).
+
+Normally I wouldn't have a repo with a project stemming from a video, but I had a few changes and fixes I wanted to make known in-case anyone else was having frustrations while following along the original tutorial, which will be addressed in the [notes](#notes) section.
+
+This web app recieves a youtube link and using AI will generate a blog posts base on the video.
 
 ## Notes
 
