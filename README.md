@@ -82,4 +82,9 @@ if BlogPost.objects.filter(youtube_link=yt_link).exists():
 
 ## Screenshots
 
-[<img src="/readme/multiweather_main.png" align="left" width="200" hspace="5" vspace="10">](/screenshots/signup.png)
+[<img src="/screenshots/signup.png" align="left" width="369" hspace="5" vspace="10">](/screenshots/signup.png)
+[<img src="/screenshots/login.png" align="left" width="369" hspace="5" vspace="10">](/screenshots/login.png)
+[<img src="/screenshots/admin.png" align="left" width="369" hspace="5" vspace="10">](/screenshots/admin.png)
+[<img src="/screenshots/index.png" align="left" width="369" hspace="5" vspace="10">](/screenshots/index.png)
+[<img src="/screenshots/blog-list.png" align="left" width="369" hspace="5" vspace="10">](/screenshots/blog-list.png)
+[<img src="/screenshots/blog-post.png" align="left" width="369" hspace="5" vspace="10">](/screenshots/blog-post.png)
